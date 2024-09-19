@@ -1,0 +1,23 @@
+<!-- templates/view_messages.html -->
+{% extends 'base.html' %}
+
+{% block title %}View Messages{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Messages from Employees</h2>
+{% if messages %}
+<div class="list-group">
+    {% for message in messages %}
+    <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ message.sender }}</h5>
+            <small>{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</small>
+        </div>
+        <p class="mb-1">{{ message.content }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<p>No messages.</p>
+{% endif %}
+{% endblock %}

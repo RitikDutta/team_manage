@@ -1,0 +1,28 @@
+<!-- templates/employee_done_projects.html -->
+{% extends 'base.html' %}
+
+{% block title %}Your Completed Projects{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Your Completed Projects</h2>
+{% if projects %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Project Name</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for project in projects %}
+        <tr>
+            <td>{{ project.name }}</td>
+            <td>{{ project.description }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>You have no completed projects.</p>
+{% endif %}
+{% endblock %}

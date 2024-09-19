@@ -1,0 +1,52 @@
+<!-- templates/assign_work.html -->
+{% extends 'base.html' %}
+
+{% block title %}Assign Work{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Assign Work</h2>
+<div class="row">
+    <div class="col-md-8">
+        <form method="post">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.name.label(class="form-label") }}
+                {{ form.name(class="form-control") }}
+            </div>
+            <div class="mb-3">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=4) }}
+            </div>
+            <div class="mb-3">
+                {{ form.assigned_to.label(class="form-label") }}
+                {{ form.assigned_to(class="form-select") }}
+            </div>
+            <div class="mb-3">
+                {{ form.task_type.label(class="form-label") }}
+                {{ form.task_type(class="form-select") }}
+            </div>
+            <div class="mb-3 row">
+                <div class="col-md-6">
+                    {{ form.start_date.label(class="form-label") }}
+                    {{ form.start_date(class="form-control") }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.start_time.label(class="form-label") }}
+                    {{ form.start_time(class="form-control") }}
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <div class="col-md-6">
+                    {{ form.end_date.label(class="form-label") }}
+                    {{ form.end_date(class="form-control") }}
+                </div>
+                <div class="col-md-6">
+                    {{ form.end_time.label(class="form-label") }}
+                    {{ form.end_time(class="form-control") }}
+                </div>
+            </div>
+            {{ form.submit(class="btn btn-success") }}
+        </form>
+    </div>
+</div>
+{% endblock %}

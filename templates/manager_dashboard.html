@@ -1,0 +1,22 @@
+<!-- templates/manager_dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Manager Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Manager Dashboard</h2>
+<div class="row">
+    <div class="col-md-6">
+        <div class="list-group">
+            <a href="{{ url_for('add_employee') }}" class="list-group-item list-group-item-action">Add Employee</a>
+            <a href="{{ url_for('assign_work') }}" class="list-group-item list-group-item-action">Assign Work</a>
+            <a href="{{ url_for('verify_work') }}" class="list-group-item list-group-item-action">Verify Work</a>
+            <a href="{{ url_for('view_messages') }}" class="list-group-item list-group-item-action">View Messages</a>
+            <a href="{{ url_for('manager_done_projects') }}" class="list-group-item list-group-item-action">Done Projects</a>
+            <a href="{{ url_for('manager_calendar') }}" class="list-group-item list-group-item-action">Task Calendar</a>
+            <a href="{{ url_for('employee_login_times') }}" class="list-group-item list-group-item-action">Employee Login Times</a>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

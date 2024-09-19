@@ -1,0 +1,44 @@
+<!-- templates/view_assigned_work.html -->
+{% extends 'base.html' %}
+
+{% block title %}Your Assigned Work{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Your Projects</h2>
+{% if projects %}
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Project Name</th>
+            <th>Description</th>
+            <th>Task Type</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for project in projects %}
+        <tr>
+            <td>{{ project.name }}</td>
+            <td>{{ project.description }}</td>
+            <td>{{ project.task_type }}</td>
+            <td>{{ project.start_date }}</td>
+            <td>{{ project.end_date }}</td>
+            <td>{{ project.status }}</td>
+            <td>
+                {% if project.status != 'completed' and project.status != 'verified' %}
+                <a href="{{ url_for('mark_as_completed', project_id=project.project_id) }}" class="btn btn-success btn-sm">Mark as Completed</a>
+                {% else %}
+                N/A
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No assigned projects.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,74 @@
+<!-- templates/manager_calendar.html -->
+{% extends 'base.html' %}
+
+{% block title %}Task Calendar{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- FullCalendar CSS -->
+<link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.css' rel='stylesheet' />
+{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Task Calendar</h2>
+
+<form method="get" class="mb-4">
+    <div class="row">
+        <div class="col-md-4">
+            <select name="employee_id" class="form-select" id="employee-select">
+                <option value="">All Employees</option>
+                {% for employee in employees %}
+                <option value="{{ employee.user_id }}" {% if employee.user_id|string == request.args.get('employee_id') %}selected{% endif %}>{{ employee.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</form>
+
+<div id='calendar'></div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<!-- FullCalendar JS -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.10.1/main.min.js'></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var employeeSelect = document.getElementById('employee-select');
+        var calendarEl = document.getElementById('calendar');
+        var employeeId = employeeSelect.value;
+
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            navLinks: true,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay' // Add buttons to switch views
+            },
+                    events: function(fetchInfo, successCallback, failureCallback) {
+                        var url = '/manager_calendar_data';
+                        if (employeeId) {
+                            url += '?employee_id=' + employeeId;
+                        }
+                        fetch(url)
+                            .then(response => response.json())
+                            .then(events => successCallback(events))
+                            .catch(error => failureCallback(error));
+                    },
+            navLinkDayClick: function(date, jsEvent) {
+                // Navigate to day view
+                calendar.changeView('timeGridDay', date);
+            }
+        });
+
+        calendar.render();
+
+        // Handle employee selection change
+        employeeSelect.addEventListener('change', function() {
+            employeeId = this.value;
+            calendar.refetchEvents();
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+<!-- templates/employee_dashboard.html -->
+{% extends 'base.html' %}
+
+{% block title %}Employee Dashboard{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Employee Dashboard</h2>
+<div class="row">
+    <div class="col-md-6">
+        <div class="list-group">
+            <a href="{{ url_for('view_assigned_work') }}" class="list-group-item list-group-item-action">View Assigned Work</a>
+            <a href="{{ url_for('send_message') }}" class="list-group-item list-group-item-action">Send Message to Manager</a>
+            <a href="{{ url_for('employee_done_projects') }}" class="list-group-item list-group-item-action">Done Projects</a>
+            <a href="{{ url_for('employee_calendar') }}" class="list-group-item list-group-item-action">Your Task Calendar</a>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

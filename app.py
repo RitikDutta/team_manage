@@ -40,7 +40,29 @@ def register():
         username = form.username.data
         password = form.password.data
         role = form.role.data
-        # other details
+
+        # Hash the password
+        hashed_password = generate_password_hash(password, method='sha256')
+
+        # Insert the new user into the database
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO Users (username, password, role) VALUES (%s, %s, %s)",
+                           (username, hashed_password, role))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            flash('Registration successful. You can now log in.')
+            return redirect(url_for('login'))
+        except mysql.connector.Error as err:
+            # Handle duplicate username error
+            if err.errno == mysql.connector.errorcode.ER_DUP_ENTRY:
+                flash('Username already exists. Please choose a different username.')
+            else:
+                flash('An error occurred during registration. Please try again.')
+            # Optionally, log the error for debugging
+            print(f"Error: {err}")
     return render_template('register.html', form=form)
 
 
@@ -491,81 +513,111 @@ def index():
 
 
 def initialize_database():
-    connection = mysql.connector.connect(
-        host=DB_CONFIG['host'],
-        user=DB_CONFIG['user'],
-        password=DB_CONFIG['password']
-    )
-    cursor = connection.cursor()
+    try:
+        # Connect to MySQL Server
+        connection = mysql.connector.connect(
+            host=DB_CONFIG['host'],
+            user=DB_CONFIG['user'],
+            password=DB_CONFIG['password']
+        )
+        cursor = connection.cursor()
 
-    # Create the database if it doesn't exist
-    cursor.execute("CREATE DATABASE IF NOT EXISTS `{}` DEFAULT CHARACTER SET 'utf8'".format(DB_CONFIG['database']))
-    cursor.execute("USE `{}`".format(DB_CONFIG['database']))
+        # Create the database if it doesn't exist
+        cursor.execute(
+            "CREATE DATABASE IF NOT EXISTS `{}` DEFAULT CHARACTER SET 'utf8mb4' COLLATE 'utf8mb4_0900_ai_ci'".format(DB_CONFIG['database'])
+        )
+        cursor.execute("USE `{}`".format(DB_CONFIG['database']))
 
-    # Create tables
-    # Users table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS Users (
-        user_id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        role ENUM('manager', 'employee') NOT NULL
-    );
-    """)
+        # Create Users table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS `Users` (
+          `user_id` int NOT NULL AUTO_INCREMENT,
+          `username` varchar(50) NOT NULL,
+          `password` varchar(255) NOT NULL,
+          `role` enum('manager','employee') NOT NULL,
+          PRIMARY KEY (`user_id`),
+          UNIQUE KEY `username` (`username`)
+        ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+        """)
 
-    # Projects table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS Projects (
-        project_id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        description TEXT,
-        assigned_to INT,
-        status ENUM('assigned', 'in_progress', 'completed', 'verified') DEFAULT 'assigned',
-        task_type ENUM('video', 'social media', 'writing', 'image') NOT NULL DEFAULT 'writing',
-        completion_date DATE,
-        FOREIGN KEY (assigned_to) REFERENCES Users(user_id) ON DELETE SET NULL
-    );
-    """)
+        # Create Projects table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS `Projects` (
+          `project_id` int NOT NULL AUTO_INCREMENT,
+          `name` varchar(100) NOT NULL,
+          `description` text,
+          `assigned_to` int DEFAULT NULL,
+          `status` enum('assigned','in_progress','completed','verified') DEFAULT 'assigned',
+          `completion_date` date DEFAULT NULL,
+          `task_type` enum('video','social media','writing','image') NOT NULL DEFAULT 'writing',
+          `start_date` date DEFAULT NULL,
+          `end_date` date DEFAULT NULL,
+          `start_time` time DEFAULT NULL,
+          `end_time` time DEFAULT NULL,
+          PRIMARY KEY (`project_id`),
+          KEY `assigned_to` (`assigned_to`),
+          CONSTRAINT `Projects_ibfk_1` FOREIGN KEY (`assigned_to`) REFERENCES `Users` (`user_id`) ON DELETE SET NULL
+        ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+        """)
 
-    # Messages table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS Messages (
-        message_id INT AUTO_INCREMENT PRIMARY KEY,
-        sender_id INT,
-        receiver_id INT,
-        content TEXT,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (sender_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-        FOREIGN KEY (receiver_id) REFERENCES Users(user_id) ON DELETE CASCADE
-    );
-    """)
+        # Create Messages table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS `Messages` (
+          `message_id` int NOT NULL AUTO_INCREMENT,
+          `sender_id` int DEFAULT NULL,
+          `receiver_id` int DEFAULT NULL,
+          `content` text,
+          `timestamp` datetime DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`message_id`),
+          KEY `sender_id` (`sender_id`),
+          KEY `receiver_id` (`receiver_id`),
+          CONSTRAINT `Messages_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE,
+          CONSTRAINT `Messages_ibfk_2` FOREIGN KEY (`receiver_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+        """)
 
-    # Holidays table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS Holidays (
-        holiday_id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        start_date DATE,
-        end_date DATE,
-        reason TEXT,
-        FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
-    );
-    """)
+        # Create Holidays table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS `Holidays` (
+          `holiday_id` int NOT NULL AUTO_INCREMENT,
+          `user_id` int DEFAULT NULL,
+          `start_date` date DEFAULT NULL,
+          `end_date` date DEFAULT NULL,
+          `reason` text,
+          PRIMARY KEY (`holiday_id`),
+          KEY `user_id` (`user_id`),
+          CONSTRAINT `Holidays_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+        """)
 
-    # LoginLogs table
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS LoginLogs (
-        log_id INT AUTO_INCREMENT PRIMARY KEY,
-        user_id INT,
-        login_date DATE,
-        login_time TIME,
-        FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE
-    );
-    """)
+        # Create LoginLogs table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS `LoginLogs` (
+          `log_id` int NOT NULL AUTO_INCREMENT,
+          `user_id` int DEFAULT NULL,
+          `login_date` date DEFAULT NULL,
+          `login_time` time DEFAULT NULL,
+          PRIMARY KEY (`log_id`),
+          UNIQUE KEY `unique_user_date` (`user_id`,`login_date`),
+          CONSTRAINT `LoginLogs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`user_id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+        """)
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+        # Commit the changes
+        connection.commit()
+        print("Database initialized successfully.")
+
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Something is wrong with your user name or password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist and could not be created")
+        else:
+            print(err)
+    finally:
+        cursor.close()
+        connection.close()
+
 
 
 

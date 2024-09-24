@@ -23,7 +23,7 @@
         var calendarEl = document.getElementById('calendar');
         var calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
-            navLinks: true,
+            navLinks: false,
             events: '/employee_calendar_data',
             navLinkDayClick: function(date, jsEvent) {
                 // Navigate to day view
